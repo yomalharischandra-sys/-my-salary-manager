@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101827"><meta name="description" content="Personal LKR salary and expense manager">
+<link rel="manifest" href="manifest.webmanifest">
+<title>My Salary Manager</title>
+<style>
+:root{--bg:#0b1220;--panel:#121d2e;--panel2:#18263a;--text:#eef4ff;--muted:#9aabc2;--line:#26364d;--green:#35d39a;--red:#ff7777;--blue:#78aaff;--gold:#f4c66a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
+header{padding:22px 18px 16px;background:linear-gradient(135deg,#14253d,#101827);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:3}
+.wrap{max-width:1000px;margin:auto}h1{font-size:22px;margin:0 0 4px}header p{margin:0;color:var(--muted);font-size:13px}
+nav{display:flex;gap:8px;overflow:auto;padding:12px 14px;background:var(--bg);position:sticky;top:80px;z-index:2}
+nav button{white-space:nowrap;background:var(--panel);border:1px solid var(--line);color:var(--muted);padding:10px 14px;border-radius:12px}
+nav button.active{background:#1c3b3c;color:var(--green);border-color:#286b5a}
+main{max-width:1000px;margin:auto;padding:8px 14px 40px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:17px;padding:16px;margin-bottom:12px;min-width:0}
+.card h2{font-size:15px;margin:0 0 12px;color:#cbd8ea}.big{font-size:26px;font-weight:750;letter-spacing:-.5px}.muted{color:var(--muted)}.green{color:var(--green)}.red{color:var(--red)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}.bank{padding:12px 0;border-top:1px solid var(--line)}.bank:first-of-type{border:0}
+.progress{height:9px;border-radius:20px;background:#27364b;overflow:hidden;margin:10px 0}.progress span{display:block;height:100%;background:var(--green);border-radius:20px}
+label{display:block;color:var(--muted);font-size:12px;margin:10px 0 5px}
+input,select{width:100%;background:#0d1726;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:12px;font:inherit}
+button{cursor:pointer;font:inherit}.primary{background:var(--green);color:#08231b;border:0;border-radius:11px;padding:12px 16px;font-weight:700}.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 13px}.danger{color:var(--red);background:transparent;border:1px solid #75404a;border-radius:9px;padding:7px 10px}
+form .primary{width:100%;margin-top:14px}.hidden{display:none!important}.tabscreen{display:none}.tabscreen.active{display:block}
+.item{padding:11px 0;border-bottom:1px solid var(--line)}.item:last-child{border:0}.small{font-size:12px;color:var(--muted)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.empty{text-align:center;color:var(--muted);padding:20px}
+@media(min-width:700px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.two .card{margin-bottom:0}}
+@media(max-width:420px){.big{font-size:22px}.card{padding:13px}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><h1>💰 MY SALARY MANAGER</h1><p>Personal finance tracker · LKR · Salary day: 25th</p></div></header>
+<nav id="nav">
+<button class="active" data-tab="home">Overview</button><button data-tab="transaction">Add transaction</button><button data-tab="accounts">Accounts & pockets</button><button data-tab="savings">Savings goal</button><button data-tab="history">History & backup</button>
+</nav>
+<main>
+<section id="home" class="tabscreen active">
+<div class="grid">
+<div class="card"><h2>Monthly salary</h2><div class="big">රු. 75,000</div><div class="small">Your planned monthly income</div></div>
+<div class="card"><h2>Available balance</h2><div class="big green" id="totalBalance">රු. 75,000</div><div class="small">Based on opening balances and transactions</div></div>
+<div class="card"><h2>Spent this month</h2><div class="big red" id="monthSpent">රු. 0</div><div class="small">Expense transactions</div></div>
+<div class="card"><h2>Savings progress</h2><div class="big" id="savedAmount">රු. 0</div><div class="small">Goal: රු. 180,000</div><div class="progress"><span id="goalBar" style="width:0%"></span></div><div class="small" id="goalPercent">0% completed</div></div>
+</div>
+<div class="two"><div class="card"><h2>🏦 Bank accounts</h2><div id="homeBanks"></div></div><div class="card"><h2>📌 People's Bank pockets</h2><div id="homePockets"></div></div></div>
+<div class="card"><h2>Recent activity</h2><div id="recent"></div></div>
+</section>
+<section id="transaction" class="tabscreen">
+<div class="card"><h2>➕ Add income or expense</h2>
+<form id="txForm">
+<label>Transaction type</label><select id="type"><option value="expense">Expense</option><option value="income">Income</option><option value="saving">Add to savings</option></select>
+<label>Description</label><input id="desc" required placeholder="e.g. Lunch, bus fare, salary">
+<label>Amount (LKR)</label><input id="amount" type="number" min="1" step="1" required placeholder="1000">
+<label>Bank account</label><select id="account"><option>BOC</option><option>Commercial Bank</option><option>People's Bank</option></select>
+<div id="pocketWrap"><label>People's Bank pocket (optional)</label><select id="pocket"><option value="">No pocket</option><option>Partner Outings</option><option>Personal</option><option>Emergency</option><option>Flexible</option></select></div>
+<label>Date</label><input id="date" type="date" required>
+<button class="primary" type="submit">Save transaction</button>
+</form></div>
+</section>
+<section id="accounts" class="tabscreen">
+<div class="card"><h2>🏦 Starting bank allocation</h2><div class="small">Your current salary distribution. Transactions update these balances automatically.</div><div id="accountDetails"></div></div>
+<div class="card"><h2>People's Bank pocket allocation</h2><div id="pocketDetails"></div><div class="small">Pocket amounts are allocations within People's Bank, not extra money.</div></div>
+</section>
+<section id="savings" class="tabscreen">
+<div class="card"><h2>❤️ Financial goal</h2><div class="big">රු. 180,000</div><p class="muted">Track how much you have saved toward your goal.</p><div class="progress"><span id="goalBar2" style="width:0%"></span></div><div class="row"><b id="savedAmount2">රු. 0</b><span class="muted" id="goalPercent2">0%</span></div>
+<form id="goalForm"><label>Add savings amount (LKR)</label><input id="goalAdd" type="number" min="1" required placeholder="5000"><label>Take from account</label><select id="goalAccount"><option>BOC</option><option>Commercial Bank</option><option>People's Bank</option></select><button class="primary">Add to savings</button></form>
+</div>
+</section>
+<section id="history" class="tabscreen">
+<div class="card"><h2>📜 Transaction history</h2><div id="historyList"></div></div>
+<div class="card"><h2>Backup & restore</h2><p class="muted">Export your data regularly. The backup file can be imported on another device, but this does not automatically sync devices.</p><div class="actions"><button class="secondary" id="exportBtn">Export backup</button><label class="secondary" style="margin:0;display:inline-block">Import backup<input id="importFile" type="file" accept="application/json" hidden></label><button class="danger" id="resetBtn">Reset all data</button></div></div>
+</section>
+</main>
+<script>
+const initial={accounts:{"BOC":38000,"Commercial Bank":15000,"People's Bank":22000},pockets:{"Partner Outings":5000,"Personal":3000,"Emergency":4000,"Flexible":10000},saved:0,tx:[]};
+let data;try{data=JSON.parse(localStorage.getItem('msm_data'))||structuredClone(initial)}catch(e){data=JSON.parse(JSON.stringify(initial))}
+const money=n=>'රු. '+Math.round(n).toLocaleString('en-US');
+const save=()=>localStorage.setItem('msm_data',JSON.stringify(data));
+const sum=()=>Object.values(data.accounts).reduce((a,b)=>a+b,0);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function render(){
+ document.getElementById('totalBalance').textContent=money(sum());
+ const month=new Date().toISOString().slice(0,7);
+ const spent=data.tx.filter(t=>t.type==='expense'&&t.date.startsWith(month)).reduce((a,t)=>a+t.amount,0);
+ document.getElementById('monthSpent').textContent=money(spent);
+ document.getElementById('savedAmount').textContent=money(data.saved);
+ document.getElementById('savedAmount2').textContent=money(data.saved);
+ const pct=Math.min(100,data.saved/180000*100);
+ ['goalBar','goalBar2'].forEach(id=>document.getElementById(id).style.width=pct+'%');
+ document.getElementById('goalPercent').textContent=Math.round(pct)+'% completed';
+ document.getElementById('goalPercent2').textContent=Math.round(pct)+'% completed';
+ document.getElementById('homeBanks').innerHTML=Object.entries(data.accounts).map(([n,v])=>`<div class="bank row"><span>${esc(n)}</span><b>${money(v)}</b></div>`).join('');
+ document.getElementById('homePockets').innerHTML=Object.entries(data.pockets).map(([n,v])=>`<div class="bank row"><span>${esc(n)}</span><b>${money(v)}</b></div>`).join('');
+ document.getElementById('accountDetails').innerHTML=Object.entries(data.accounts).map(([n,v])=>`<div class="item row"><span>${esc(n)}</span><b>${money(v)}</b></div>`).join('');
+ document.getElementById('pocketDetails').innerHTML=Object.entries(data.pockets).map(([n,v])=>`<div class="item row"><span>${esc(n)}</span><b>${money(v)}</b></div>`).join('');
+ const txhtml=t=>`<div class="item row"><div><b>${esc(t.desc)}</b><div class="small">${esc(t.date)} · ${esc(t.account)}${t.pocket?' · '+esc(t.pocket):''}</div></div><div class="${t.type==='expense'?'red':'green'}">${t.type==='expense'?'-': '+'}${money(t.amount)}</div></div>`;
+ document.getElementById('recent').innerHTML=data.tx.length?data.tx.slice(-5).reverse().map(txhtml).join(''):'<div class="empty">No transactions yet. Add your first expense.</div>';
+ document.getElementById('historyList').innerHTML=data.tx.length?[...data.tx].reverse().map((t,i)=>txhtml(t)+`<div style="text-align:right;margin-top:-4px"><button class="danger" data-delete="${data.tx.length-1-i}">Delete</button></div>`).join(''):'<div class="empty">No transaction history yet.</div>';
+}
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.tabscreen').forEach(x=>x.classList.toggle('active',x.id===b.dataset.tab));}));
+document.getElementById('date').value=new Date().toISOString().slice(0,10);
+document.getElementById('txForm').addEventListener('submit',e=>{
+ e.preventDefault();const type=document.getElementById('type').value,amount=Number(document.getElementById('amount').value),account=document.getElementById('account').value,pocket=document.getElementById('pocket').value,date=document.getElementById('date').value,desc=document.getElementById('desc').value.trim();
+ if(!desc||amount<=0)return;
+ if(type==='expense'||type==='saving'){if(data.accounts[account]<amount){alert('Not enough balance in this account.');return;}data.accounts[account]-=amount;if(type==='saving')data.saved+=amount;}
+ else data.accounts[account]+=amount;
+ data.tx.push({type,amount,account,pocket:account==="People's Bank"?pocket:'',date,desc});save();e.target.reset();document.getElementById('date').value=new Date().toISOString().slice(0,10);render();alert('Transaction saved.');
+});
+document.getElementById('goalForm').addEventListener('submit',e=>{e.preventDefault();const amount=Number(document.getElementById('goalAdd').value),account=document.getElementById('goalAccount').value;if(amount<=0)return;if(data.accounts[account]<amount){alert('Not enough balance in this account.');return;}data.accounts[account]-=amount;data.saved+=amount;data.tx.push({type:'saving',amount,account,pocket:'',date:new Date().toISOString().slice(0,10),desc:'Savings goal deposit'});save();e.target.reset();render();alert('Savings updated!');});
+document.getElementById('historyList').addEventListener('click',e=>{const i=e.target.dataset.delete;if(i===undefined)return;if(!confirm('Delete this transaction? The account balance will be restored.'))return;const t=data.tx[Number(i)];if(t.type==='expense'||t.type==='saving')data.accounts[t.account]+=t.amount;else data.accounts[t.account]-=t.amount;if(t.type==='saving')data.saved=Math.max(0,data.saved-t.amount);data.tx.splice(Number(i),1);save();render();});
+document.getElementById('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='my-salary-manager-backup.json';a.click();URL.revokeObjectURL(a.href);};
+document.getElementById('importFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!d.accounts||!d.tx||!d.pockets)throw 0;data=d;save();render();alert('Backup restored.');}catch(err){alert('Invalid backup file.');}};
+document.getElementById('resetBtn').onclick=()=>{if(confirm('This will erase all transactions and restore the original plan. Continue?')){data=JSON.parse(JSON.stringify(initial));save();render();}};
+render();
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
+</body></html>
